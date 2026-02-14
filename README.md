@@ -136,3 +136,40 @@ Inside `spec`, we define the **desired state** of the application (such as the n
 The Kubernetes controller continuously checks the current state of the cluster and compares it with the desired state defined in the `spec`.
 
 If there is any difference, the controller updates the system to match the desired state you provided.
+
+
+
+# Kubernetes Object Structure
+
+Each Kubernetes object has a different `spec` depending on its type.
+
+## apiVersion
+Defines which API version of the Kubernetes API server you are using for this object.
+
+Example:
+- `v1`
+- `apps/v1`
+- `batch/v1`
+
+## kind
+Specifies the type of object you are creating.
+
+Examples:
+- Pod
+- Deployment
+- Service
+- Job
+
+## metadata
+Contains data that helps uniquely identify the object, such as:
+- `name` – Name of the object
+- `namespace` – The namespace where it exists
+- `uid` – A unique identifier automatically assigned by Kubernetes
+- `labels` – Key-value pairs for organizing objects
+
+## spec
+Stands for specification.
+
+This is where you define the desired state of the object.
+Each object type has a different `spec` structure.
+
