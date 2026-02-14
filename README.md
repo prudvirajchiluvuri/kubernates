@@ -1,38 +1,127 @@
-Kubernates:
+Here is your content converted into clean, structured **Markdown format**:
 
-It is originated from greek word and its meaning is pilot.
-It is also called k8s.
-It is given by google
+---
 
+# Kubernetes
 
-Container are need in production.
-Wouldnt it easter to start another container if one stops ?
+* The word **Kubernetes** originated from Greek, meaning **"pilot"**.
+* It is also called **K8s**.
+* It was originally developed by Google.
 
-It will help in scalling and failover
+---
 
-Kubernates:
-1) Service discovery and load balancing: It distrubutes loads to the containers
-2) Storage Ochestration : If need you can store the data like local storage or any cloud provider
-3)Automated rollout and rollbacks
-4) Automatic bin packing
-5) Self healing
-6) Secret and configuration managment
-7) batch execution
-8) horizontal scalling
-9) ip4/ip6 dual stack to pods and services
+## Why Containers Are Needed in Production
 
-<img width="1352" height="649" alt="image" src="https://github.com/user-attachments/assets/d5634318-9a46-46af-9d38-62cd53795eee" />
+* Containers are needed in production environments.
+* If one container stops, wouldn’t it be easier to automatically start another one?
+* Kubernetes helps with:
 
-api server : serves the apis 
-etcd : it is a key value storage to store the api server processed data.
-kube-controller : It makes sure the current state reaches to the desired state.
-scheduler: It schedues the pods to run on the node
-cloud-kube-controller : it connect external cloud providers
+  * Scaling
+  * Failover
+  * High availability
 
-node is a machine
-pods is a group of containers (they have same network and storage)
+---
 
-kubectl is to contorl the pod
-kube-proxy is a network firewall
+# Features of Kubernetes
 
+1. **Service Discovery and Load Balancing**
 
+   * Distributes network traffic across containers.
+
+2. **Storage Orchestration**
+
+   * Allows storage from:
+
+     * Local storage
+     * Cloud providers
+     * Network storage systems
+
+3. **Automated Rollouts and Rollbacks**
+
+   * Automatically updates applications.
+   * Rolls back if something fails.
+
+4. **Automatic Bin Packing**
+
+   * Efficiently places containers based on resource requirements.
+
+5. **Self-Healing**
+
+   * Restarts failed containers.
+   * Replaces unhealthy Pods.
+
+6. **Secret and Configuration Management**
+
+   * Manages sensitive information securely.
+
+7. **Batch Execution**
+
+   * Runs batch jobs and scheduled tasks.
+
+8. **Horizontal Scaling**
+
+   * Scale applications up or down automatically.
+
+9. **IPv4/IPv6 Dual Stack Support**
+
+   * Supports both IPv4 and IPv6 for Pods and Services.
+
+---
+
+# Kubernetes Architecture Components
+
+## Control Plane Components
+
+### API Server
+
+* Serves the Kubernetes APIs.
+* Entry point for all cluster communication.
+
+### etcd
+
+* Key-value store.
+* Stores cluster data processed by the API server.
+
+### kube-controller-manager
+
+* Ensures the current state matches the desired state.
+
+### Scheduler
+
+* Schedules Pods to run on nodes.
+
+### Cloud Controller Manager
+
+* Connects Kubernetes with external cloud providers.
+
+---
+
+# Node Components
+
+* A **Node** is a machine (physical or virtual).
+
+## Pods
+
+* A **Pod** is a group of containers.
+* Containers inside a Pod:
+
+  * Share the same network
+  * Share storage
+
+---
+
+# Command-Line and Networking Components
+
+### kubectl
+
+* Used to control and manage the cluster.
+* Sends commands to the API server.
+
+### kube-proxy
+
+* Handles networking rules on nodes.
+* Acts like a network traffic manager (not exactly a firewall).
+
+---
+
+If you'd like, I can also correct and polish it into **interview-ready notes** with clearer technical wording.
