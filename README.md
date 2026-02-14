@@ -173,3 +173,36 @@ Stands for specification.
 This is where you define the desired state of the object.
 Each object type has a different `spec` structure.
 
+# Kubernetes Server-Side Field Validation (v1.25+)
+
+Starting with **Kubernetes v1.25**, the API server can perform **server-side field validation**, which detects:
+
+- Unrecognized fields in an object  
+- Duplicate fields in an object  
+
+This provides the same functionality as `kubectl --validate`, but on the **server side**.
+
+---
+
+## kubectl `--validate` flag
+
+The `--validate` flag controls the **level of field validation**. It accepts:
+
+| Value   | Behavior |
+|---------|----------|
+| `strict` | Performs strict validation. Errors will **fail the request**. |
+| `warn`   | Validation is performed, but errors show as **warnings**, not failures. |
+| `ignore` | No server-side validation is performed. |
+| `true`  | Equivalent to `strict`. |
+| `false` | Equivalent to `ignore`. |
+
+**Default:** `--validate=true` (strict validation)
+
+---
+
+### Summary
+
+- **Strict:** Stop on validation errors.  
+- **Warn:** Continue but show warnings.  
+- **Ignore:** Skip validation entirely.  
+
