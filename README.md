@@ -124,4 +124,15 @@ Here is your content converted into clean, structured **Markdown format**:
 
 ---
 
-If you'd like, I can also correct and polish it into **interview-ready notes** with clearer technical wording.
+# Creating Objects in Kubernetes
+
+We create objects in Kubernetes using a **YAML (.yml) file**.
+
+For example, we create a **Deployment** object.
+
+In the Deployment file, we specify the `spec` field.  
+Inside `spec`, we define the **desired state** of the application (such as the number of replicas, container image, etc.).
+
+The Kubernetes controller continuously checks the current state of the cluster and compares it with the desired state defined in the `spec`.
+
+If there is any difference, the controller updates the system to match the desired state you provided.
