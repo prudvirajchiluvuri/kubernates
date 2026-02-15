@@ -260,7 +260,6 @@ kubectl replace -f nginx.yaml
 
 **Cons:**
 - Works best on files, not directories
-- Manual updates needed to keep config in sync
 
 ---
 
