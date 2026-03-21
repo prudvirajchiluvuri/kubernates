@@ -574,5 +574,65 @@ metadata:
     cicd: "https://jenkins.example.com/job/123"
     owner: "team@example.com"
 ```
+# Kubernetes Field Selectors
+
+Field selectors are used for **filtering Kubernetes objects based on object properties (fields)**.
+
+
+
+## 🔹 What are Field Selectors?
+
+* Field selectors are used for **filtering resources**
+* They use **object properties (fields)** instead of labels
+* These fields are **predefined by Kubernetes**
+
+
+
+## 🔹 Examples
+
+```bash
+metadata.name=my-service
+metadata.namespace!=default
+status.phase=Pending
+```
+
+
+## 🔹 Important Notes
+
+* Field selector properties **vary based on resource type**
+
+  * Different resources (Pods, Services, StatefulSets, etc.) support different fields
+
+## 🔹 Supported Operators
+
+Field selectors support only **equality-based operators**:
+
+* `=`
+* `==`
+* `!=`
+
+❌ Not supported:
+
+* `in`
+* `notin`
+* Any set-based operators
+
+
+## 🔹 Multiple Conditions
+
+You can combine multiple conditions using commas:
+
+```bash
+kubectl get pods --field-selector=status.phase!=Running,spec.restartPolicy=Always
+```
+
+
+## 🔹 Multiple Resource Types
+
+You can query multiple resource types in a single command:
+
+```bash
+kubectl get statefulsets,services --all-namespaces --field-selector=metadata.namespace!=default
+```
 
 
