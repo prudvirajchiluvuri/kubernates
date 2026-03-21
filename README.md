@@ -321,6 +321,7 @@ kubectl apply -R -f configs/
 ```yaml
 metadata:
   generateName: my-app-
+```
 
 # Kubernetes Labels
 
