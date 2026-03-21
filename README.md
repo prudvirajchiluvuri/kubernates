@@ -292,5 +292,34 @@ kubectl apply -R -f configs/
 - Steepest learning curve
 
 ---
+# Kubernetes Object Naming Rules
+
+## 🔹 Uniqueness
+- **Object name** must be unique within a **specific resource type**.
+- Example:
+  - `my-app1` can be a **Pod**
+  - `my-app1` can also be a **Deployment**
+- These do not conflict because they are different resource types.
+
+- **UUID**:
+  - Always unique across the **entire cluster**
+
+---
+
+## 🔹 API Version
+- `apiVersion` is **irrelevant** to object naming
+- Naming rules apply **regardless of API version**
+
+---
+
+## 🔹 generateName
+- Instead of `name`, you can use `generateName`
+- It acts as a **prefix**
+- Kubernetes will add a **random suffix**
+
+### Example:
+```yaml
+metadata:
+  generateName: my-app-
 
 
