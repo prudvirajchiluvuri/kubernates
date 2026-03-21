@@ -322,4 +322,174 @@ kubectl apply -R -f configs/
 metadata:
   generateName: my-app-
 
+# Kubernetes Labels
+
+## 🔹 What are Labels?
+
+Labels are **key/value pairs** attached to Kubernetes objects during creation and can also be modified later.
+
+* Help in **querying and filtering objects**
+* Can be **shared across multiple objects** (not unique)
+
+### Example
+
+```yaml
+metadata:
+  labels:
+    key1: value1
+```
+
+---
+
+## 🔹 Why Labels?
+
+Rigid folder structures are difficult to query.
+
+### Example:
+
+```
+/production
+  /frontend
+    /v1
+```
+
+➡️ Querying becomes complex.
+
+👉 Kubernetes uses **labels instead of folder structures** for better flexibility and querying.
+
+---
+
+## 🔹 Label Structure
+
+A label has **2 parts**:
+
+```
+prefix/name = value
+```
+
+* **prefix** → Optional
+* **name** → Required
+
+### Purpose of Prefix
+
+* Used by system components to differentiate from user-defined labels
+
+### Example
+
+```
+kubernetes.io/hostname=pod1
+```
+
+👉 Without prefix (e.g., `hostname`), it's hard to identify whether it is system-defined or user-defined.
+
+### Reserved Prefixes
+
+* `kubernetes.io/`
+* `k8s.io/`
+
+---
+
+## 🔹 Label Selectors
+
+There are **2 types of selectors**:
+
+### 1) Equality-Based Selectors
+
+Operators:
+
+* `=`
+* `==`
+* `!=`
+
+👉 Multiple conditions can be combined using commas.
+
+#### Example
+
+```
+environment=production,tier=frontend
+```
+
+---
+
+### 2) Set-Based Selectors
+
+Operators:
+
+* `in`
+* `notin`
+* `exists`
+
+👉 Can be combined and mixed with equality-based selectors.
+
+#### Examples
+
+```
+environment in (production, qa)
+tier notin (frontend, backend)
+```
+
+* `notin` also matches objects **without the label**
+
+```
+partition
+```
+
+* Matches objects **that have the label** (value not checked)
+
+```
+!partition
+```
+
+* Matches objects **without the label**
+
+---
+
+## 🔹 Query Parameters (API Filtering)
+
+### Equality-Based
+
+```
+?labelSelector=environment%3Dproduction,tier%3Dfrontend
+```
+
+### Set-Based
+
+```
+?labelSelector=environment+in+%28production%2Cqa%29%2Ctier+in+%28frontend%29
+```
+
+---
+
+## 🔹 Selectors in YAML
+
+```yaml
+selector:
+  matchLabels:
+    component: redis
+  matchExpressions:
+    - key: tier
+      operator: In
+      values:
+        - cache
+    - key: environment
+      operator: NotIn
+      values:
+        - dev
+```
+
+* **matchLabels** → Simple key=value matching
+* **matchExpressions** → Advanced filtering using operators
+
+---
+
+## 🔹 Updating Labels
+
+### Example:
+
+Find pods with `app=nginx` and add `tier=fe`
+
+```bash
+kubectl label pods -l app=nginx tier=fe
+```
+
 
