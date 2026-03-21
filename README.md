@@ -493,4 +493,86 @@ Find pods with `app=nginx` and add `tier=fe`
 kubectl label pods -l app=nginx tier=fe
 ```
 
+# Kubernetes Metadata
+
+Kubernetes objects support **metadata**, which helps in organizing, managing, and adding additional information.
+
+---
+
+## 🔹 Types of Metadata
+
+### 1) Labels
+
+- Used for **selecting and filtering objects**
+- Helps in grouping and querying resources
+
+
+
+### 2) Annotations
+
+- Used to **store additional information**
+- Not used for filtering like labels
+- Useful for **documentation, tracking, and integrations**
+
+
+
+## 🔹 Annotation Use Cases
+
+Annotations can store various types of information:
+
+
+
+### 📌 1) Build / Release / Image Information
+
+- Build timestamp  
+- Release version (e.g., `main`, `v1.0`)  
+- Docker image details  
+
+
+
+### 📌 2) External Tool Links
+
+- Logging tools  
+- Monitoring systems  
+- Analytics dashboards  
+
+
+
+### 📌 3) CI/CD Pipeline Links
+
+- Pipeline execution links  
+- Deployment jobs  
+- Build system references  
+
+
+
+### 📌 4) Rollout Metadata
+
+- Deployment configurations  
+- Checkpoints  
+- Version tracking  
+
+
+### 📌 5) Contact Information
+
+- Owner details  
+- Team contact  
+- Support or escalation info  
+
+
+## 🔹 Example
+
+```yaml
+metadata:
+  labels:
+    app: nginx
+  annotations:
+    build: "2026-03-22T10:00:00Z"
+    release: "main"
+    image: "nginx:latest"
+    monitoring: "https://grafana.example.com/dashboard"
+    cicd: "https://jenkins.example.com/job/123"
+    owner: "team@example.com"
+```
+
 
