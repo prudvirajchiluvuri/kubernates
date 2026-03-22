@@ -792,4 +792,30 @@ finalizers:
 * Child finalizer can delay parent deletion
 
 
+This field decides whether the parent object can be garbage collected.
+
+👉 It is **by default set to `true`**.  
+👉 If needed, you can manually set it to `false`.
+
+
+## 🔹 Behavior
+
+- **`blockOwnerDeletion: true`**
+  - Prevents the parent object from being deleted.
+  - The child object can block garbage collection of the parent.
+
+- **`blockOwnerDeletion: false`**
+  - Allows the parent object to be deleted.
+  - The child object does not block parent deletion.
+
+
+
+## 🔹 Summary
+
+| Value  | Behavior |
+|--------|---------|
+| true   | Prevents parent deletion |
+| false  | Allows parent deletion |
+
+---
 
