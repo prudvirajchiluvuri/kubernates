@@ -634,5 +634,162 @@ You can query multiple resource types in a single command:
 ```bash
 kubectl get statefulsets,services --all-namespaces --field-selector=metadata.namespace!=default
 ```
+---
+
+# Kubernetes Finalizers & Owner References (Simple Notes)
+
+
+## 🔹 Finalizers
+
+Finalizers are **keys (strings)** stored in:
+
+```yaml
+metadata.finalizers
+```
+
+👉 They tell Kubernetes:
+
+> Wait before deleting this object until some condition is met.
+
+
+
+## 🔹 How Deletion Works
+
+When you try to delete an object:
+
+```bash
+kubectl delete <resource>
+```
+
+Kubernetes does the following:
+
+1. Sets:
+
+   ```yaml
+   metadata.deletionTimestamp
+   ```
+
+2. API returns:
+
+   ```
+   202 Accepted
+   ```
+
+3. Object goes into:
+
+   ```
+   Terminating
+   ```
+
+
+
+## 🔹 When is Object Deleted?
+
+👉 Object is deleted ONLY when:
+
+```yaml
+metadata.finalizers: []
+```
+
+
+
+## 🔹 Example: PV Protection
+
+```yaml
+finalizers:
+  - kubernetes.io/pv-protection
+```
+
+### Behavior:
+
+* Added automatically by Kubernetes
+* Prevents deletion of PersistentVolume
+
+### When Added?
+
+* When a Pod is using the storage
+
+### When Removed?
+
+* When the storage is no longer in use
+
+
+
+## 🔹 Owner References (Parent → Child)
+
+Example:
+
+* Job → Parent
+* Pod → Child
+
+Pod contains:
+
+```yaml
+ownerReferences:
+```
+
+👉 This tells Kubernetes that:
+
+> Pod belongs to Job
+
+
+
+## 🔹 Deletion Flow Example
+
+### Step 1: Create Job
+
+* Job creates Pods
+* Pods have ownerReferences
+
+
+
+### Step 2: Delete Job
+
+```bash
+kubectl delete job my-job
+```
+
+
+
+### Step 3: Kubernetes Behavior
+
+* Finds Pods using ownerReferences
+* Tries to delete Pods first
+
+
+
+### Step 4: Pod Has Finalizer
+
+```yaml
+finalizers:
+  - example.com/cleanup
+```
+
+👉 Then:
+
+* Pod deletion is blocked
+* Pod stays in Terminating state
+
+
+
+### Step 5: Impact on Job
+
+* Pods are not deleted
+* Job deletion is delayed
+
+
+
+## 🔹 Key Concept
+
+* Finalizer on child can block parent deletion indirectly
+
+
+## 🔹 Simple Summary
+
+* Finalizers → Delay deletion until safe
+* OwnerReferences → Define parent-child relationship
+* Object is deleted only when finalizers list is empty
+* Child finalizer can delay parent deletion
+
 
 
