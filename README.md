@@ -818,4 +818,173 @@ This field decides whether the parent object can be garbage collected.
 | false  | Allows parent deletion |
 
 ---
+# Kubernetes Containers & Runtime Notes
+
+## 📦 Container Basics
+
+- A container is a package of:
+  - Application
+  - Dependencies
+  - System libraries
+
+- Containers are **decoupled from underlying infrastructure**, so they can run on any OS.
+
+---
+
+## ⚙️ Container Runtimes
+
+Kubernetes supports:
+- containerd
+- CRI-O
+- Any implementation of **CRI (Container Runtime Interface)**
+
+---
+
+## 🖼️ Container Image Formats
+
+### 1. Using Tag
+repo/name:tag
+
+- Tag can change over time ❌
+- Not reliable for production
+
+---
+
+### 2. Using Digest
+repo/name@sha256:2343...
+
+- Digest is fixed ✅
+- Immutable and unique
+
+👉 **Best Practice:** Always use digest instead of tag
+
+---
+
+## 🌐 Image Registry with Port
+
+Example:
+fictional.registry.example:10443/imagename
+
+- Used when registry runs on a **custom port**
+
+---
+
+## 📥 Image Pull Policy
+
+### 1. IfNotPresent
+- Use local image if available
+- Otherwise pull from registry
+
+### 2. Always
+- Always check and pull from registry
+
+### 3. Never
+- Use only local image
+- Fail if not available
+
+---
+
+## ⚠️ Default Image Pull Policy Behavior
+
+| Condition | Policy |
+|----------|--------|
+| No tag or `:latest` | Always |
+| Tag exists (not latest) | IfNotPresent |
+| Digest used | IfNotPresent |
+
+---
+
+## 🔐 Pulling Images from Private Registry
+
+### 1. Using imagePullSecrets (Recommended)
+
+- Secret must be in same namespace
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+spec:
+  containers:
+  - name: app
+    image: mycompany/private-app
+  imagePullSecrets:
+  - name: my-secret
+```
+
+---
+
+### 2. Node-Level Authentication (`docker login`)
+
+#### Example config.json
+
+```json
+{
+  "auths": {
+    "my-registry.example/images": {
+      "auth": "user1:pass1"
+    },
+    "*.my-registry.example/images/subpath": {
+      "auth": "user2:pass2"
+    }
+  }
+}
+```
+
+---
+
+### 3. Static Pods + Credential Plugin
+
+- Managed by kubelet directly
+- Do NOT use Secrets or ServiceAccounts
+- Plugin fetches credentials
+
+---
+
+### 4. Pre-pulled Images
+
+- Images already present on node
+- Requires same images on all nodes
+
+---
+
+## 🌱 Container Environment
+
+- Pod name & namespace injected as env variables
+- Services in same namespace also injected
+
+---
+
+## 🔄 Container Lifecycle Hooks
+
+### Hooks:
+- PostStart
+- PreStop
+- StopSignal
+
+### Handlers:
+- Exec (inside container)
+- HTTP (kubelet)
+- Sleep (delay)
+
+---
+
+## ⚠️ Important Notes
+
+- PostStart runs parallel to container start
+- PreStop must finish before SIGTERM
+- Grace period includes PreStop + shutdown time
+- Hooks may run multiple times
+- Debug using:
+  kubectl describe pod
+
+---
+
+## 🧠 Key Takeaways
+
+- Use digest over tags
+- Prefer imagePullSecrets
+- Avoid heavy PostStart logic
+- Ensure PreStop fits in grace period
 
