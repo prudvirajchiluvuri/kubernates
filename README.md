@@ -1127,3 +1127,201 @@ All containers inside the same Pod:
 Containers inside the same Pod are tightly coupled and designed to work together.
 <img width="1536" height="1024" alt="ChatGPT Image May 24, 2026, 12_34_33 AM" src="https://github.com/user-attachments/assets/1196335a-e74b-47d6-bd51-c3778765167e" />
 
+
+# Kubernetes Resource Requests and Limits
+
+Kubernetes allows you to define how much CPU and memory a container needs.
+
+There are two important concepts:
+
+| Concept | Meaning |
+|---|---|
+| Requests | Minimum resources guaranteed |
+| Limits | Maximum resources allowed |
+
+
+# Kubernetes Example
+
+```yaml
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "500m"
+
+  limits:
+    memory: "512Mi"
+    cpu: "1"
+```
+
+# What This Means
+
+## Requests
+
+```yaml
+requests:
+```
+
+Container needs at least:
+- 256MB RAM
+- 0.5 CPU
+
+The Kubernetes scheduler uses this information to decide where to place the Pod.
+
+If a node does not have enough free resources:
+- Pod stays in Pending state
+
+
+
+# Limits
+
+```yaml
+limits:
+```
+
+Container cannot exceed:
+- 512MB RAM
+- 1 CPU
+
+
+# CPU Limit Behavior
+
+If the container tries to use too much CPU:
+
+```text
+Kubernetes slows it down
+```
+
+This is called:
+
+```text
+CPU Throttling
+```
+
+The container continues running but becomes slower.
+
+
+# Memory Limit Behavior
+
+If the container exceeds memory:
+
+```text
+Kernel kills the container
+```
+
+This is called:
+
+```text
+OOM Kill (Out Of Memory)
+```
+
+
+# Important Difference
+
+| Resource | If Limit Exceeded |
+|---|---|
+| CPU | Slowed down |
+| Memory | Container killed |
+
+
+# Why Limits Exist
+
+Suppose one container uses all CPU or memory.
+
+Other applications on the same node become slow.
+
+This problem is called:
+
+```text
+Noisy Neighbor Problem
+```
+
+Limits help prevent this.
+
+
+# CPU Limits Downside
+
+Suppose your node has:
+
+```text
+8 CPUs total
+```
+
+Your container limit is:
+
+```yaml
+limits:
+  cpu: 1
+```
+
+Meaning:
+
+```text
+Container can use maximum 1 CPU only
+```
+
+# Important Scenario
+
+Node usage:
+
+```text
+Only 2 CPUs are being used
+6 CPUs are FREE
+```
+
+But your application suddenly needs:
+
+```text
+2 CPUs temporarily
+```
+
+Kubernetes says:
+
+```text
+NO
+Your limit is 1 CPU
+```
+
+Even though:
+- machine has free CPU
+- nobody else is using it
+
+your container still gets restricted.
+
+This restriction is called:
+
+```text
+CPU Throttling
+```
+
+# Result
+
+Your application becomes:
+- slower
+- delayed
+- high latency
+
+Especially for:
+- APIs
+- Real-time apps
+- Gaming systems
+- Trading systems
+
+
+# Why Memory Limits Are Different
+
+Memory cannot be shared safely like CPU.
+
+If one application uses too much RAM:
+- node may crash
+- other applications may fail
+
+So memory limits are very important.
+
+CPU is more flexible because workloads can share CPU time.
+
+That is why some companies:
+- always set memory limits
+- sometimes avoid strict CPU limits
+
+especially for performance-sensitive applications.
+
