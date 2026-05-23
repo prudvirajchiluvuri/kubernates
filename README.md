@@ -1325,3 +1325,66 @@ That is why some companies:
 
 especially for performance-sensitive applications.
 
+# Init Container vs Sidecar Container
+
+Earlier in Kubernetes:
+
+```text
+Init Container → starts → completes work → exits
+```
+
+Init containers were temporary setup containers.
+
+
+# New Sidecar Feature
+
+Now Kubernetes allows:
+
+```yaml
+restartPolicy: Always
+```
+
+inside an init container.
+
+This makes the init container behave like a sidecar container.
+
+
+# What Happens
+
+```text
+1. Sidecar starts first
+2. Main application starts
+3. Both keep running together
+4. Both stop when Pod stops
+```
+
+# Can Init Container Become Sidecar?
+
+YES ✅
+
+If an init container uses:
+
+```yaml
+restartPolicy: Always
+```
+
+it becomes a long-running sidecar-style container.
+
+
+# Can We Have Multiple Sidecars?
+
+YES ✅
+
+A Pod can contain:
+
+```text
+Main App Container
++
+Logging Sidecar
++
+Monitoring Sidecar
++
+Proxy Sidecar
+```
+
+Multiple sidecars are very common in real projects.
