@@ -1125,4 +1125,5 @@ All containers inside the same Pod:
 - share the same storage volumes
 
 Containers inside the same Pod are tightly coupled and designed to work together.
+<img width="1536" height="1024" alt="ChatGPT Image May 24, 2026, 12_34_33 AM" src="https://github.com/user-attachments/assets/1196335a-e74b-47d6-bd51-c3778765167e" />
 
