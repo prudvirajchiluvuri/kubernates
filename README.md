@@ -988,3 +988,141 @@ spec:
 - Avoid heavy PostStart logic
 - Ensure PreStop fits in grace period
 
+
+----------------------------------
+# Kubernetes Pods and PodTemplate Notes
+
+Pods are a group of containers that share the same network and storage resources.
+
+Usually, containers inside a Pod work closely together.  
+Example:
+- Main application container
+- Logging/monitoring sidecar container
+
+## A Pod can contain
+
+### Init Containers
+Used for initialization tasks before the main container starts.
+
+### Main Containers
+These run the actual application.
+
+### Ephemeral Containers
+Temporary containers mainly used for debugging.  
+They are not part of the normal application lifecycle.
+
+Conceptually:
+
+```text
+Pod = Init Containers + Main Containers + Ephemeral Containers
+```
+
+However, in most real-world applications, people usually prefer:
+- one main application container per Pod
+- plus optional helper/sidecar containers
+
+
+
+# Example of a Simple Pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  containers:
+    - name: linux2
+      image: nginx
+```
+
+Usually, Pods are not created directly.  
+Instead, they are managed by workload resources such as:
+
+- Kubernetes Deployment
+- Kubernetes Job
+- Kubernetes StatefulSet
+- Kubernetes DaemonSet
+
+`StatefulSet` is mainly used when applications need stable identity and state tracking.
+
+If you need multiple replicas of Pods, you should not manually create multiple Pods.  
+Instead, workload resources handle replication and management automatically.
+
+The controller continuously monitors the Pods and maintains the desired state.
+
+
+# spec.os.name
+
+`spec.os.name` specifies the intended operating system for the Pod.
+
+Example:
+
+```yaml
+spec:
+  os:
+    name: linux
+```
+
+However, in current Kubernetes versions, this field alone does not guarantee scheduling to the correct node.
+
+To actually place the Pod on the correct OS node, you should use:
+
+```yaml
+nodeSelector:
+  kubernetes.io/os: linux
+```
+
+
+# Auto-Healing
+
+If a Pod fails or a node becomes unhealthy, the controller creates a replacement Pod on a healthy node.
+
+
+
+# PodTemplate
+
+A `PodTemplate` is a specification used by workload resources to create Pods.
+
+Example:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+        - name: hello
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - echo "Hello, Kubernetes!" && sleep 3600
+      restartPolicy: OnFailure
+```
+
+The `template` section is the PodTemplate.
+
+Controllers use this template to:
+- create Pods
+- replace failed Pods
+- scale Pods
+- update Pods
+
+When the PodTemplate changes, the controller gradually replaces old Pods with new Pods containing the updated configuration.
+
+
+
+# Pod Networking and Storage
+
+All containers inside the same Pod:
+- share the same IP address
+- share the same network namespace
+- can communicate using `localhost`
+- share the same storage volumes
+
+Containers inside the same Pod are tightly coupled and designed to work together.
+
