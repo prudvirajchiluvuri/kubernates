@@ -1387,4 +1387,35 @@ Monitoring Sidecar
 Proxy Sidecar
 ```
 
-Multiple sidecars are very common in real projects.
+# Static Pods
+
+Static Pods are managed directly by the kubelet daemon on a specific node, without the API server observing them. Whereas most Pods are managed by the control plane (for example, a Deployment), static Pods are directly supervised by the kubelet, which also restarts them if they fail.
+
+## Key Points
+
+- Static Pods are managed directly by the kubelet on a specific node.
+- They are **not managed by the Kubernetes control plane**.
+- The kubelet ensures the Pod is running and restarts it if it fails.
+- Each static Pod is bound to a single node.
+
+## Use Case
+
+The main use of static Pods is to run a **self-hosted control plane**. In this setup, the kubelet supervises critical control plane components directly.
+
+## Mirror Pods
+
+- The kubelet creates a *mirror Pod* in the Kubernetes API server for each static Pod.
+- This makes static Pods visible via the API server.
+- However, they **cannot be managed or modified via the API server**.
+
+## Important Note
+
+> The spec of a static Pod cannot refer to other API objects such as:
+> - ServiceAccount  
+> - ConfigMap  
+> - Secret  
+> - Any other Kubernetes API resources
+
+## Summary
+
+Static Pods are directly managed by the kubelet, run on a single node, and are mainly used for control plane components in self-hosted Kubernetes setups.
