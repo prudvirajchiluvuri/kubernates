@@ -1419,3 +1419,500 @@ The main use of static Pods is to run a **self-hosted control plane**. In this s
 ## Summary
 
 Static Pods are directly managed by the kubelet, run on a single node, and are mainly used for control plane components in self-hosted Kubernetes setups.
+
+# Kubernetes Pod Lifecycle & Restart Notes
+
+# Pod Lifecycle
+
+* `kubectl` itself does **not** restart Pods.
+* The **kubelet** and higher-level controllers (Deployment, ReplicaSet, StatefulSet, etc.) are responsible for restarting or recreating Pods.
+* If a **node fails**, the Pod running on that node cannot continue there.
+* If the Pod is managed by a controller, Kubernetes schedules a **new Pod** on another healthy node.
+
+
+# Scheduling vs Binding
+
+## Scheduling
+
+Scheduling is the process of **deciding which node a Pod should run on**.
+
+```
+Pod
+   ↓
+Scheduler selects Node
+```
+
+
+
+## Binding
+
+Binding is the process of **assigning the selected Pod to the chosen node**.
+
+```
+Scheduler chooses Node
+          ↓
+Pod is bound to Node
+```
+
+
+
+# Pod Deletion and Volumes
+
+* When a Pod is deleted, **ephemeral volumes** (such as `emptyDir`) are deleted.
+* **PersistentVolumes (PV/PVC)** are **not automatically deleted** simply because the Pod is deleted.
+
+
+# Pod Phase (`status.phase`)
+
+## Pending
+
+* Kubernetes accepted the Pod.
+* Waiting for scheduling, image pulling, or resource allocation.
+
+
+## Running
+
+* Pod has been assigned to a node.
+* At least one container is running.
+
+
+## Succeeded
+
+* All containers terminated successfully.
+* Exit code = 0.
+
+
+
+## Failed
+
+* At least one container terminated with failure.
+* Pod will not continue successfully.
+
+
+
+## Unknown
+
+* Kubernetes cannot determine the Pod state.
+* Usually due to communication problems with the node.
+
+
+## Terminating
+
+Occurs when a Pod is being deleted.
+
+
+# CrashLoopBackOff
+
+CrashLoopBackOff means:
+
+> The container starts, crashes, restarts repeatedly, and Kubernetes waits longer between restart attempts.
+
+Example:
+
+```
+Start
+  ↓
+Crash
+  ↓
+Restart
+  ↓
+Crash
+  ↓
+Wait (Backoff)
+  ↓
+Restart
+```
+
+
+## Backoff Reset
+
+If the container runs successfully for approximately **10 minutes**, Kubernetes resets the exponential backoff timer and treats the next crash as a first failure.
+
+
+# Container States
+
+A container has three states:
+
+## Waiting
+
+Examples:
+
+* Pulling image
+* Creating container
+* Mounting volumes
+* Configuring secrets
+
+
+
+## Running
+
+Container is executing successfully.
+
+
+## Terminated
+
+Container execution finished.
+
+Termination may be:
+
+* Successful
+* Failed
+
+Check the termination reason for details.
+
+
+
+# Common Reasons for Pod Crashes
+
+1. Application bugs
+2. Incorrect configuration
+
+   * Environment variables
+   * Mounted volumes
+3. Insufficient CPU or memory
+4. Health probe failures
+
+
+
+# Investigating Pod Failures
+
+Useful commands:
+
+```bash
+kubectl get pods
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+kubectl logs <pod-name> -c <container-name>
+kubectl get events
+```
+
+
+# Pod-Level Restart Policy
+
+Pod restart policies:
+
+* Always
+* OnFailure
+* Never
+
+These apply to:
+
+* App containers
+* Init containers
+
+Sidecar containers can have their own restart behavior and may not always follow the Pod-level policy depending on the feature being used.
+
+
+
+# Container-Level Restart Policy
+
+Requirements:
+
+* `ContainerRestartRules` feature gate enabled.
+
+Then individual containers can specify:
+
+```yaml
+restartPolicy:
+restartPolicyRules:
+```
+
+to override the Pod policy.
+
+Applicable to:
+
+* App containers
+* Init containers
+
+
+## Example
+
+```yaml
+restartPolicy: Never
+
+containers:
+- name: app
+  restartPolicy: Never
+  restartPolicyRules:
+  - action: Restart
+    exitCodes:
+      operator: In
+      values: [42]
+```
+
+Only exit code **42** causes restart.
+
+
+
+# Restart Entire Pod In Place
+
+Requirement:
+
+* `RestartAllContainersOnContainerExits` feature gate enabled.
+
+Use:
+
+```yaml
+action: RestartAllContainers
+```
+
+inside `restartPolicyRules`.
+
+When matched:
+
+* Entire Pod restarts **in place**.
+
+
+
+## In-place Restart Preserves
+
+* Pod name
+* Pod IP
+* Volumes
+* Network identity
+
+
+
+## In-place Restart Flow
+
+```
+Container exits
+      ↓
+RestartAllContainers triggered
+      ↓
+All containers terminated
+      ↓
+Init containers start again
+      ↓
+Main containers start
+      ↓
+Sidecars start
+```
+
+
+## PodRestartInPlace Flag
+
+During restart:
+
+```
+PodRestartInPlace=True
+```
+
+After restart completes:
+
+```
+PodRestartInPlace=False
+```
+
+
+# Pod Conditions
+
+`status.phase` tells whether a Pod is Running, Failed, etc.
+
+Pod Conditions provide more detailed lifecycle information.
+
+
+
+## PodCondition Structure
+
+* type
+* status
+* lastProbeTime
+* lastTransitionTime
+* reason
+* message
+* observedGeneration
+
+
+
+# Built-in Pod Conditions
+
+## PodScheduled
+
+Pod has been assigned to a node.
+
+
+## PodReadyToStartContainers
+
+Sandbox and networking are ready.
+
+CRI has:
+
+* Created sandbox
+* Configured networking
+
+Only then can image pulling and container creation begin.
+
+
+
+## Initialized
+
+All init containers completed successfully.
+
+If there are no init containers, this becomes true immediately.
+
+
+
+## ContainersReady
+
+All containers are ready.
+
+
+## Ready
+
+Pod is ready to serve traffic.
+
+
+# PodReadyToStartContainers = False
+
+Occurs when:
+
+1. Sandbox has not yet been created.
+
+OR
+
+2. Sandbox disappeared because:
+
+* Node rebooted
+* Pod sandbox VM rebooted
+
+
+# Other Pod Conditions
+
+* PodResizePending
+* PodResizeInProgress
+* DisruptionTarget
+
+
+
+# DisruptionTarget
+
+Indicates Kubernetes plans to terminate the Pod because of an external disruption.
+
+## Reasons
+
+### PreemptionByScheduler
+
+Higher-priority Pod needs resources.
+
+
+### DeletionByTaintManager
+
+Node has a `NoExecute` taint that the Pod does not tolerate.
+
+
+
+### EvictionByEvictionAPI
+
+Pod eviction requested via Kubernetes API.
+
+
+
+### DeletionByPodGC
+
+Node no longer exists and Pod is garbage collected.
+
+
+
+### TerminationByKubelet
+
+Examples:
+
+* Node memory pressure
+* Disk pressure
+* Graceful node shutdown
+* System-critical Pod preemption
+
+
+# Pod Resize Conditions
+
+## PodResizePending
+
+Resize requested but cannot yet be granted.
+
+Reason `Infeasible` means requested size cannot be satisfied.
+
+
+
+## PodResizeInProgress
+
+Resize has been accepted and is currently being applied.
+
+
+
+# Init Containers
+
+Init containers:
+
+* Run before application containers.
+* Run sequentially.
+* Next init container starts only after previous one succeeds.
+
+```
+Init1
+   ↓
+Init2
+   ↓
+Init3
+   ↓
+Main Container
+```
+
+
+## If Init Container Fails
+
+It is restarted according to restart policy.
+
+If restart policy is `Never` and it fails:
+
+```
+Pod → Failed
+```
+
+Status:
+
+```
+.status.initContainerStatuses
+```
+
+
+## Init Container Supports
+
+* Volumes
+* Security settings
+* Resource limits
+
+Init containers **do not support**:
+
+* Lifecycle hooks
+* Liveness probes
+* Readiness probes
+* Startup probes
+
+
+
+# Sidecar Containers
+
+Sidecar containers:
+
+* Start before or alongside the main application depending on configuration.
+* Continue running during the Pod lifetime.
+
+Unlike init containers, sidecars support:
+
+* Lifecycle hooks
+* Liveness probes
+* Readiness probes
+* Startup probes
+
+
+# Difference Between Init Container and Sidecar
+
+| Init Container                                                         | Sidecar Container                                                 |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Runs before main container                                             | Runs alongside the main container                                 |
+| Executes once                                                          | Continues running                                                 |
+| Must finish before app starts                                          | Provides supporting functionality throughout Pod lifetime         |
+| Runs sequentially if multiple exist                                    | Runs concurrently with the application                            |
+| Does **not** support lifecycle, liveness, readiness, or startup probes | Supports lifecycle hooks, liveness, readiness, and startup probes |
+
