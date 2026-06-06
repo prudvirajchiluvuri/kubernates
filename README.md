@@ -1915,4 +1915,254 @@ Unlike init containers, sidecars support:
 | Must finish before app starts                                          | Provides supporting functionality throughout Pod lifetime         |
 | Runs sequentially if multiple exist                                    | Runs concurrently with the application                            |
 | Does **not** support lifecycle, liveness, readiness, or startup probes | Supports lifecycle hooks, liveness, readiness, and startup probes |
+# Kubernetes Init Containers
+
+## What is an Init Container?
+
+* An **init container** runs **before** the main application containers.
+* All init containers must **complete successfully** before the app containers start.
+* They run **only once per Pod startup**.
+
+
+
+# Uses of Init Containers
+
+## 1. Install or prepare tools required by the main container
+
+* Download binaries
+* Install utilities
+* Generate configuration files
+
+Example:
+
+* Init container downloads a migration script.
+* Main application uses it after startup.
+
+
+
+## 2. Reduce the attack surface
+
+Instead of building one large image containing:
+
+* Application
+* curl
+* wget
+* git
+* bash
+* debugging tools
+
+You can:
+
+* Keep the main application image minimal.
+* Use an init container for temporary setup tasks.
+
+**Benefit:**
+
+* Smaller image
+* Better security
+* Fewer vulnerabilities
+
+
+
+## 3. Split responsibilities instead of one big image
+
+Rather than creating a single image that performs:
+
+* Setup
+* Configuration
+* Application startup
+
+You can separate them:
+
+```
+Init Container
+    ↓
+Performs setup
+
+Main Container
+    ↓
+Runs the application
+```
+
+This follows the principle of one responsibility per container.
+
+
+## 4. Ensure preconditions are met before starting the application
+
+The main container starts **only after** all init containers finish successfully.
+
+Examples:
+
+* Wait for a database to become available
+* Wait for another service to be reachable
+* Generate required configuration
+* Download required files
+
+If an init container fails, the main container will **not** start.
+
+
+
+# Common Use Cases
+
+## 1. Wait until a service is up
+
+Example:
+
+```
+Init Container
+      ↓
+Checks Database
+      ↓
+Database Ready?
+      ↓
+Yes
+      ↓
+Main Application Starts
+```
+
+
+## 2. Wait for dependencies
+
+Examples:
+
+* Database
+* Redis
+* Kafka
+* External API
+
+The application starts only after dependencies are available.
+
+
+## 3. Clone a repository into a shared volume
+
+Example:
+
+```
+Git Repository
+        ↓
+Init Container
+        ↓
+Shared Volume
+        ↓
+Main Container
+```
+
+The main application reads the files from the shared volume.
+
+
+
+## 4. Inject Pod information
+
+The init container can collect information such as:
+
+* Pod name
+* IP address
+* Namespace
+* Configuration
+
+It can write this information into a shared volume for the main container to consume.
+
+
+# Restart Behavior
+
+If the Pod is recreated or restarted from scratch:
+
+```
+Init Container
+      ↓
+Runs Again
+      ↓
+Main Container Starts
+```
+
+Therefore, init containers should be **idempotent**.
+
+## Idempotent means
+
+Running the same operation multiple times should produce the same correct result.
+
+Example:
+
+Good:
+
+```
+Create directory if it does not exist
+```
+
+Bad:
+
+```
+Insert duplicate data every time it runs
+```
+
+# Updating Init Containers
+
+Changing the init container specification or image **does not affect an already running Pod**.
+
+The changes take effect **only when a new Pod is created**, such as during:
+
+* Deployment rollout
+* Pod deletion and recreation
+* Scaling operations
+
+
+# Pod Template Changes
+
+If you modify the Pod template in a Deployment, Kubernetes creates **new Pods** with the updated template.
+
+The impact depends on the controller:
+
+* Deployment → Rolling update
+* Job → New execution
+* StatefulSet → Ordered updates (depending on strategy)
+
+
+# Readiness Probe
+
+Init containers **cannot have a `readinessProbe`**.
+
+Reason:
+
+* They either:
+
+  * are running, or
+  * have completed.
+
+They do not have a separate "Ready" state like long-running application containers.
+
+
+# activeDeadlineSeconds
+
+`activeDeadlineSeconds` can be set on a Pod to prevent it from retrying forever.
+
+Example:
+
+Pod starts
+      ↓
+Init container keeps failing
+      ↓
+Deadline exceeded
+      ↓
+Pod is terminated
+```
+
+**Note:**
+The deadline includes both:
+
+* Init container execution time
+* Main container execution time
+
+Because of this, it is generally more suitable for **Jobs** than for long-running applications.
+
+
+
+# Important Points
+
+* Init containers run before application containers.
+* All init containers must complete successfully.
+* Main containers do not start until init containers finish.
+* Init containers cannot have a `readinessProbe`.
+* They should be **idempotent** because they may run again when a new Pod is created.
+* Updating an init container affects only newly created Pods.
+* `activeDeadlineSeconds` limits the total Pod lifetime, including init containers.
 
