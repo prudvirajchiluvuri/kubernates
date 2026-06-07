@@ -2167,6 +2167,124 @@ Because of this, it is generally more suitable for **Jobs** than for long-runnin
 * Updating an init container affects only newly created Pods.
 * `activeDeadlineSeconds` limits the total Pod lifetime, including init containers.
 
+
+## What is a Sidecar Container?
+
+A **Sidecar Container** is a container that runs **alongside the main application container** in the same Pod.
+
+It provides additional functionality such as:
+
+- Logging
+- Monitoring
+- Security
+- Data synchronization (Data Sync)
+- Proxy/Service Mesh functionality
+
+without modifying the main application code.
+
+
+
+# Example
+
+```
+Pod
+│
+├── Main Application Container
+│      └── Spring Boot Application
+│
+└── Sidecar Container
+       └── Logging Agent / Monitoring Agent
+```
+
+The main application focuses on business logic, while the sidecar handles supporting tasks.
+
+
+
+# Creating a Sidecar Container
+
+An **Init Container** with:
+
+```yaml
+restartPolicy: Always
+```
+
+acts as a **Sidecar Container**.
+
+Unlike a normal init container, it continues running throughout the Pod's lifetime instead of exiting after initialization.
+
+
+
+# Characteristics
+
+- Runs alongside the main application container.
+- Independent of the main application container.
+- Can be restarted without affecting the main application container.
+- Used for auxiliary functions like logging, monitoring, security, and data synchronization.
+
+
+
+# Termination Behavior
+
+A sidecar container **does not terminate before the main application container**.
+
+It terminates **only after the main application container terminates**.
+
+Example:
+
+```
+Pod
+
+├── Main Container
+└── Sidecar Container
+
+        ↓
+
+Main Container exits
+
+        ↓
+
+Kubernetes terminates the Sidecar Container
+```
+
+
+
+# Graceful Termination
+
+When a Pod is terminated:
+
+1. Kubernetes first allows the **main application container** to shut down gracefully.
+2. After the grace period, Kubernetes sends:
+   - `SIGTERM`
+   - followed by `SIGKILL` (if the process does not exit).
+3. Since the sidecar is considered less important than the main application, its termination happens after the main container's lifecycle.
+  
+
+
+# Image Update Behavior
+
+Updating the **Sidecar Container image** does **not** restart the entire Pod.
+
+Instead, Kubernetes restarts **only the Sidecar Container**, while the main application container continues running.
+
+ 
+
+# Use Cases
+
+- Centralized Logging
+- Monitoring and Metrics Collection
+- Security Agents
+- Service Mesh Proxies
+- Data Synchronization
+- Configuration Reloaders
+
+
+
+# Interview Definition
+```
+> A **Sidecar Container** is a helper container that runs alongside the main application container within the same Pod to provide additional capabilities such as logging, monitoring, security, or data synchronization without modifying the main application code.
+````
+
+
 # Ephemeral Containers (Simple Explanation)
 
 ## What is an Ephemeral Container?
